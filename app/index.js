@@ -1,4 +1,4 @@
-const { app, BrowserWindow, shell, Menu } = require('electron');
+const { app, BrowserWindow, shell, Menu, contentTracing } = require('electron');
 const createRPC = require('./rpc');
 const createMenu = require('./menu');
 const uuid = require('uuid');
@@ -96,6 +96,21 @@ app.on('ready', () => {
       } else {
         console.log('ignoring auto updates during dev');
       }
+
+      const options = {
+        categoryFilter: '*',
+        traceOptions: 'record-until-full,enable-sampling'
+      }
+
+      contentTracing.startRecording(options, () => {
+        console.log('Tracing started')
+
+        setTimeout(() => {
+          contentTracing.stopRecording('', (path) => {
+            console.log('Tracing data recorded to ' + path)
+          })
+        }, 5000);
+      })
     });
 
     rpc.on('new', ({ rows = 40, cols = 100, cwd = process.env.HOME }) => {
